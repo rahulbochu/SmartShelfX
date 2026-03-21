@@ -1,12 +1,17 @@
 package backend.dto;
 
 import backend.enums.TransactionType;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class StockTransactionRequest {
+
     private Long productId;
+    private TransactionType type;   // IN or OUT only
     private Integer quantity;
-    private TransactionType type;
     private Long handledById;
+    private String reason;
+    private String referenceNumber;
 }

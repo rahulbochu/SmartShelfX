@@ -2,6 +2,6 @@ package backend.enums;
 
 public enum Role {
     ADMIN,
-    MANAGER,
-    VENDOR
+    USER,
+    Vendor
 }

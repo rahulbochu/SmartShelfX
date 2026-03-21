@@ -1,17 +1,24 @@
 package backend.dto;
 
 import backend.enums.TransactionType;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 public class StockTransactionResponse {
+
     private Long id;
+    private Long productId;
     private String productName;
     private String sku;
-    private Integer quantity;
     private TransactionType type;
-    private LocalDateTime timestamp;
-    private String handledBy;
+    private Integer quantity;
     private Integer stockAfterTransaction;
+    private String handledBy;
+    private String reason;
+    private String referenceNumber;
+    private LocalDateTime timestamp;
 }

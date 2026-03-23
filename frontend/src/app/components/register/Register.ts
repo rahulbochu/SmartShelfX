@@ -32,7 +32,7 @@ import { AuthService } from '../../services/auth';
             <select [(ngModel)]="role">
               <option value="ADMIN">Admin</option>
               <option value="USER">User</option>
-              <option value="VENDOR">Vendor</option>
+              <option value="Vendor">Vendor</option>
             </select>
           </div>
         </div>

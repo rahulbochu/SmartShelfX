@@ -13,23 +13,49 @@ export class ReportService {
     return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
   }
 
-  getInventorySummary(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/inventory-summary`, { headers: this.getHeaders() });
+  // Convert plain date string to ISO datetime string backend expects
+  private toDateTime(date: string, endOfDay = false): string {
+    return endOfDay ? `${date}T23:59:59` : `${date}T00:00:00`;
   }
 
-  getStockMovement(from: string, to: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/stock-movement?from=${from}&to=${to}`, { headers: this.getHeaders() });
+  // GET /api/reports/dashboard
+  getDashboardSummary(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/dashboard`, { headers: this.getHeaders() });
   }
 
-  getTopProducts(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/top-products`, { headers: this.getHeaders() });
+  // GET /api/reports/stock-movement?from=...&to=...
+  getStockMovement(from: string, to: string, productId?: number): Observable<any> {
+    const fromDt = this.toDateTime(from);
+    const toDt = this.toDateTime(to, true);
+    let url = `${this.apiUrl}/stock-movement?from=${fromDt}&to=${toDt}`;
+    if (productId) url += `&productId=${productId}`;
+    return this.http.get<any>(url, { headers: this.getHeaders() });
   }
 
-  getLowStockReport(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/low-stock`, { headers: this.getHeaders() });
+  // GET /api/reports/sales?from=...&to=...
+  getSalesReport(from: string, to: string): Observable<any> {
+    const fromDt = this.toDateTime(from);
+    const toDt = this.toDateTime(to, true);
+    return this.http.get<any>(`${this.apiUrl}/sales?from=${fromDt}&to=${toDt}`, { headers: this.getHeaders() });
   }
 
-  getOrderStats(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/order-stats`, { headers: this.getHeaders() });
+  // GET /api/reports/expiry
+  getExpiryReport(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/expiry`, { headers: this.getHeaders() });
+  }
+
+  // GET /api/reports/charts/stock-movement?days=30
+  getStockMovementChart(days = 30): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/charts/stock-movement?days=${days}`, { headers: this.getHeaders() });
+  }
+
+  // GET /api/reports/charts/top-selling?days=30
+  getTopSellingChart(days = 30): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/charts/top-selling?days=${days}`, { headers: this.getHeaders() });
+  }
+
+  // GET /api/reports/charts/stock-by-category
+  getStockByCategoryChart(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/charts/stock-by-category`, { headers: this.getHeaders() });
   }
 }

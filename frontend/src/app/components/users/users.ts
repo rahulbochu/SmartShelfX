@@ -1,4 +1,3 @@
-// ===================== users.ts =====================
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -34,7 +33,7 @@ import { SidebarComponent } from '../../shared/sidebar';
     td { padding:13px 16px; font-size:14px; color:#cbd5e1; border-bottom:1px solid #1e293b; }
     tbody tr:last-child td { border-bottom:none; }
     tbody tr:hover { background:#253347; }
-    .avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; }
+    .avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
     .user-cell { display:flex; align-items:center; gap:10px; }
     .user-info .name { font-weight:600; color:#f1f5f9; font-size:14px; }
     .user-info .email { font-size:12px; color:#64748b; }
@@ -73,7 +72,10 @@ import { SidebarComponent } from '../../shared/sidebar';
         </div>
 
         <div class="toolbar">
-          <div class="search-box"><mat-icon>search</mat-icon><input type="text" placeholder="Search users..." [(ngModel)]="searchTerm" (input)="search()" /></div>
+          <div class="search-box">
+            <mat-icon>search</mat-icon>
+            <input type="text" placeholder="Search users..." [(ngModel)]="searchTerm" (input)="search()" />
+          </div>
         </div>
 
         <div class="data-table-wrap" *ngIf="!loading && filtered.length > 0">
@@ -83,12 +85,20 @@ import { SidebarComponent } from '../../shared/sidebar';
               <tr *ngFor="let u of filtered">
                 <td>
                   <div class="user-cell">
-                    <div class="avatar" [style.background]="getAvatarColor(u.name)">{{ getInitials(u.name) }}</div>
-                    <div class="user-info"><div class="name">{{ u.name || u.username }}</div><div class="email">{{ u.email }}</div></div>
+                    <div class="avatar" [style.background]="getAvatarColor(u)">{{ getInitials(u) }}</div>
+                    <div class="user-info">
+                      <div class="name">{{ u.username || u.name || u.email }}</div>
+                      <div class="email">{{ u.email }}</div>
+                    </div>
                   </div>
                 </td>
                 <td>
-                  <span class="badge" [class.badge-admin]="u.role==='ADMIN'" [class.badge-user]="u.role==='USER'" [class.badge-vendor]="u.role==='Vendor'">{{ u.role }}</span>
+                  <span class="badge"
+                    [class.badge-admin]="u.role==='ADMIN'"
+                    [class.badge-user]="u.role==='USER'"
+                    [class.badge-vendor]="u.role==='Vendor'">
+                    {{ u.role }}
+                  </span>
                 </td>
                 <td>
                   <select class="role-select" [(ngModel)]="u.role" (change)="changeRole(u.id, u.role)">
@@ -97,54 +107,114 @@ import { SidebarComponent } from '../../shared/sidebar';
                     <option value="Vendor">Vendor</option>
                   </select>
                 </td>
-                <td><button class="btn-icon delete" (click)="delete(u.id)"><mat-icon>delete</mat-icon></button></td>
+                <td>
+                  <button class="btn-icon delete" (click)="delete(u.id)" title="Delete user">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="empty-state" *ngIf="!loading && filtered.length === 0"><mat-icon>manage_accounts</mat-icon><p>No users found.</p></div>
-        <div class="loading-state" *ngIf="loading"><div class="spinner"></div><p>Loading...</p></div>
+        <div class="empty-state" *ngIf="!loading && filtered.length === 0">
+          <mat-icon>manage_accounts</mat-icon><p>No users found.</p>
+        </div>
+        <div class="loading-state" *ngIf="loading">
+          <div class="spinner"></div><p>Loading...</p>
+        </div>
       </main>
     </div>
   `
 })
 export class UsersComponent implements OnInit {
-  users: any[] = []; filtered: any[] = []; searchTerm = '';
-  loading = false; successMsg = ''; errorMsg = '';
+  users: any[] = [];
+  filtered: any[] = [];
+  searchTerm = '';
+  loading = false;
+  successMsg = '';
+  errorMsg = '';
 
-  constructor(private userService: UserService, private authService: AuthService, private router: Router, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private userService: UserService,
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() { this.loadUsers(); }
 
   loadUsers() {
     this.loading = true;
     this.userService.getAllUsers().subscribe({
-      next: (data) => { this.users = data; this.filtered = data; this.loading = false; this.cdr.detectChanges(); },
-      error: () => { this.loading = false; this.errorMsg = 'Failed to load users.'; this.cdr.detectChanges(); }
+      next: (data) => {
+        this.users = data;
+        this.filtered = data;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMsg = 'Failed to load users.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
   search() {
     const t = this.searchTerm.toLowerCase();
-    this.filtered = this.users.filter(u => u.name?.toLowerCase().includes(t) || u.username?.toLowerCase().includes(t) || u.email?.toLowerCase().includes(t) || u.role?.toLowerCase().includes(t));
+    this.filtered = this.users.filter(u =>
+      u.username?.toLowerCase().includes(t) ||
+      u.name?.toLowerCase().includes(t) ||
+      u.email?.toLowerCase().includes(t) ||
+      u.role?.toLowerCase().includes(t)
+    );
   }
 
   changeRole(id: number, role: string) {
     this.userService.updateUserRole(id, role).subscribe({
-      next: () => { this.successMsg = 'Role updated!'; setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000); },
-      error: () => { this.errorMsg = 'Failed to update role.'; this.loadUsers(); this.cdr.detectChanges(); }
+      next: () => {
+        this.successMsg = 'Role updated successfully!';
+        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000);
+      },
+      error: () => {
+        this.errorMsg = 'Failed to update role.';
+        this.loadUsers();
+        this.cdr.detectChanges();
+      }
     });
   }
 
   delete(id: number) {
     if (!confirm('Delete this user? This cannot be undone.')) return;
     this.userService.deleteUser(id).subscribe({
-      next: () => { this.successMsg = 'User deleted.'; this.loadUsers(); setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000); },
-      error: () => { this.errorMsg = 'Delete failed.'; this.cdr.detectChanges(); }
+      next: () => {
+        this.successMsg = 'User deleted.';
+        this.loadUsers();
+        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000);
+      },
+      error: () => {
+        this.errorMsg = 'Delete failed.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
-  countByRole(role: string) { return this.users.filter(u => u.role === role).length; }
-  getInitials(name: string): string { if (!name) return '?'; return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2); }
-  getAvatarColor(name: string): string { const c = ['#1d4ed8','#7c3aed','#0369a1','#c2410c','#166534','#9d174d']; return c[(name?.charCodeAt(0) || 0) % c.length]; }
+  countByRole(role: string) {
+    return this.users.filter(u => u.role === role).length;
+  }
+
+  getInitials(u: any): string {
+    const n = u.username || u.name || u.email || '?';
+    return n.split(/[@.\s]/)
+      .filter(Boolean)
+      .map((p: string) => p[0].toUpperCase())
+      .join('')
+      .slice(0, 2);
+  }
+
+  getAvatarColor(u: any): string {
+    const n = u.username || u.name || u.email || 'U';
+    const colors = ['#1d4ed8', '#7c3aed', '#0369a1', '#c2410c', '#166534', '#9d174d'];
+    return colors[(n.charCodeAt(0) || 0) % colors.length];
+  }
 }

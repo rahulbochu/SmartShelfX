@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
@@ -13,8 +13,18 @@ export class NotificationService {
     return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
   }
 
+  // Returns Page<> — extract content
   getAllNotifications(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl, { headers: this.getHeaders() });
+    return this.http.get<any>(`${this.apiUrl}?page=0&size=20`, { headers: this.getHeaders() })
+      .pipe(map(data => {
+        if (Array.isArray(data)) return data;
+        if (data?.content) return data.content;
+        return [];
+      }));
+  }
+
+  getUnreadNotifications(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/unread`, { headers: this.getHeaders() });
   }
 
   getUnreadCount(): Observable<number> {

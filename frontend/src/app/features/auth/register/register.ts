@@ -187,6 +187,8 @@ export class RegisterComponent {
   ) {}
 
   register() {
+
+  if (this.loading) return;
     console.log('Sending role:', this.role);
     this.errorMsg = '';
     this.successMsg = '';

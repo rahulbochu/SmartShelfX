@@ -21,7 +21,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Keep as `username` — matches your existing AuthServiceImpl usage
     @Column(nullable = false)
     private String username;
 

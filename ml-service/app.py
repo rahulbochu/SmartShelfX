@@ -9,7 +9,7 @@ def train_and_predict(transactions, days_to_predict=7):
     if len(transactions) < 2:
         # Not enough data, use average
         avg = sum(transactions) / len(transactions) if transactions else 1.0
-        return avg * days_to_predict
+        return avg * days_to_predict, "Average Baseline"
 
     X = np.array(range(len(transactions))).reshape(-1, 1)
     y = np.array(transactions, dtype=float)
@@ -41,11 +41,15 @@ def train_and_predict(transactions, days_to_predict=7):
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
 
         product_id = data.get('productId')
         current_stock = data.get('currentStock', 0)
         transactions = data.get('transactions', [])
+        # Normalize and guard input to keep model path predictable.
+        if not isinstance(transactions, list):
+            return jsonify({'error': 'transactions must be a list of numbers'}), 400
+        transactions = [float(value) for value in transactions]
         reorder_level = data.get('reorderLevel', 10)
 
         # Get predicted demand and model used
@@ -80,6 +84,14 @@ def predict():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/', methods=['GET'])
+def root():
+    return jsonify({
+        'service': 'SmartShelfX ML Service',
+        'status': 'running',
+        'endpoints': ['/health', '/predict']
+    })
 
 @app.route('/health', methods=['GET'])
 def health():
